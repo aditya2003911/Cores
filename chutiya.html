@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map Clone</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+
+    <!-- Leaflet.PM CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.pm/dist/leaflet.pm.css" />
+
+    <!-- Leaflet measuring tool CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-measure/dist/leaflet-measure.css">
+
+    <!-- Leaflet.Icon CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.icon.css" />
+
+    <!-- Leaflet Control Geocoder CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #vehicleModeSelector {
+            position: fixed;
+            bottom: 8px;
+            right: 8px;
+            z-index: 1000;
+            background-color: white;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #locateMeButton {
+            position: fixed;
+            bottom: 150px;
+            left: 2px;
+            z-index: 1000;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #081f08;
+            color: rgb(204, 196, 196);
+            cursor: pointer;
+        }
+
+        #RoadSafetyFeature {
+            position: absolute;
+            bottom: 50px;
+            right: 8px;
+            z-index: 1000;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: rgb(232, 235, 237);
+            color: black;
+            cursor: default;
+        }
+
+        /* Add style for the search box */
+        #search-box {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background-color: white;
+            padding: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="search-box">
+        <label for="search-place">Search Place:</label>
+        <input type="text" id="search-place" placeholder="Enter place">
+        <button id="search-button" onclick="searchPlace()">Search</button>
+    </div>
+
+    <div id="map" style="height: 100vh;"></div>
+    <div id="vehicleModeSelector">
+        <label for="vehicleMode"> Vehicle Mode:</label>
+        <select id="vehicleMode">
+            <option value="select">Select</option>
+            <option value="car">Car</option>
+            <option value="bike">Bike</option>
+            <option value="bus">Bus</option>
+            <option value="cycle">Cycle</option>
+            <option value="truck/lorry">Truck/Lorry</option>
+            <option value="ambulance">Ambulance</option>
+            <option value="e-vehicles">E-Vehicles</option>
+            <option value="others">Others</option>
+        </select>
+        <button onclick="changeVehicleMode()">Apply</button>
+    </div>
+    <div id="RoadSafetyFeature">
+        <label for="RoadSafety">Road Safety:</label>
+        <select id="RoadSafety">
+            <option value="select">Select</option>
+            <option value="hospital">Hospital</option>
+            <option value="policeStation">Police Station</option>
+        </select>
+        <button onclick="RoadSafetyFeature()">Apply</button>
+    </div>
+
+    <!-- Custom "Locate Me" button -->
+    <button id="locateMeButton" onclick="locateMe()">Locate Me</button>
+
+    <!-- leaflet js -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- leaflet routing machine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+    <!-- leaflet drawing plugin -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+
+    <!-- leaflet measuring tool -->
+    <script src="https://unpkg.com/leaflet-measure/dist/leaflet-measure.js"></script>
+
+    <!-- leaflet.pm JavaScript this is for drawing on the screen -->
+    <script src="https://unpkg.com/leaflet.pm"></script>
+
+    <!-- Leaflet Control Geocoder JavaScript for searching the place on the map -->
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+    <script>
+        var liveLocationMarker;
+
+        function getLiveLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(function (position) {
+                    var latlng = [position.coords.latitude, position.coords.longitude];
+
+                    if (!liveLocationMarker) {
+                        // Create marker if not already created
+                        liveLocationMarker = L.marker(latlng).addTo(map);
+                        liveLocationMarker.bindPopup('Current location');
+                    } else {
+                        // Update marker position
+                        liveLocationMarker.setLatLng(latlng).update();
+                    }
+
+                    map.setView(latlng, 15);
+                }, function (error) {
+                    console.error('Error getting live location:', error.message);
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+
+        // Map initialization
+        var map = L.map('map').setView([0, 0], 2);
+
+        L.Control.geocoder().addTo(map); // for searching the place on the map
+
+        // osm layer
+        var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+        osm.addTo(map);
+
+        L.control.scale().addTo(map);
+
+        // Create measuring control
+        var measureControl = new L.Control.Measure({
+            primaryLengthUnit: 'kilometers',
+            secondaryLengthUnit: 'meters',
+            primaryAreaUnit: 'sqkilometers',
+            secondaryAreaUnit: 'sqmeters',
+        });
+        map.addControl(measureControl);
+
+        // Event listener for the start event of the measuring tool
+        map.on('measurestart', function () {
+            map.dragging.disable();
+        });
+
+        // Event listener for the stop event of the measuring tool
+        map.on('measurestop', function () {
+            map.dragging.enable();
+        });
+
+        // Locate Me function
+        function locateMe() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var latlng = [position.coords.latitude, position.coords.longitude];
+
+                    if (!liveLocationMarker) {
+                        liveLocationMarker = L.marker(latlng).addTo(map);
+                        liveLocationMarker.bindPopup('Current location');
+                    } else {
+                        liveLocationMarker.setLatLng(latlng).update();
+                    }
+
+                    map.setView(latlng, 15);
+                }, function (error) {
+                    console.error('Error getting live location:', error.message);
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+
+        // Function to search for a place using Leaflet Control Geocoder
+        function searchPlace() {
+            var searchInput = document.getElementById('search-place').value;
+
+            // Use the geocoding service of Leaflet Control Geocoder
+            L.Control.Geocoder.nominatim().geocode(searchInput, function (results) {
+                if (results && results.length > 0) {
+                    var latLng = results[0].center;
+                    map.panTo(new L.LatLng(latLng.lat, latLng.lng));
+                } else {
+                    console.log('Place not found');
+                    // You may want to display an error message to the user
+                }
+            });
+        }
+
+        
+        // Initialize the routing control
+        var control = L.Routing.control({
+            waypoints: [
+                L.latLng(0, 0), // Replace with the default start point or current location if needed
+                L.latLng(0, 0)  // Replace with the default end point
+            ],
+            routeWhileDragging: true
+        });
+        control.addTo(map);
+
+        getLiveLocation();  // Call the function to get live location
+    </script>
+</body>
+
+</html>

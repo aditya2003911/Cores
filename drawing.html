@@ -1,0 +1,48 @@
+<!-- Add this section in your existing <script> tag -->
+    <script>
+        var liveLocationMarker;
+    
+        function getLiveLocation() {
+            // ... (unchanged)
+    
+            map.setView(latlng, 15);
+        }
+    
+        var map = L.map('map', {
+            measureControl: true,
+        }).setView([0, 0], 2);
+    
+        L.Control.geocoder().addTo(map);
+    
+        var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+        osm.addTo(map);
+    
+        L.control.scale().addTo(map);
+    
+        // Include leaflet.draw functionality
+        var drawnFeatures = new L.FeatureGroup();
+        map.addLayer(drawnFeatures);
+    
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnFeatures,
+                remove: true,
+            },
+            draw: {
+                polygon: true,
+                polyline: true,
+                rectangle: true,
+                circle: true,
+                marker: true,
+            },
+        });
+    
+        map.addControl(drawControl);
+    
+        // ... (unchanged)
+    
+        getLiveLocation();
+    </script>
+    

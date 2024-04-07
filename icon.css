@@ -1,0 +1,10 @@
+.leaflet-control-measure .leaflet-control-measure-toggle,
+.leaflet-control-measure .leaflet-control-measure-toggle:hover {
+  background-size: 24px 24px; /* Set the size of your icon */
+  background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4mUTX_n3-jaKrcPMd7B21v6vV3FvaL3jUMFTOB7rjF27rMv7YHkeGDvudVdhfy6MGeHg');
+  border: 0;
+  border-radius: 4px;
+  text-indent: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, intial-scale=1.0">
+    <title>Leaflet map by raj</title>
+
+        <!--leaflet css-->   
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+   
+    
+    <style>
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+</body>
+
+</html>
+
+<!--  leaflet js  -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+<script>
+    // Map initialization  
+    var map = L.map('map').setView([0, 0], 2)
+    
+       
+    //osm layer
+    var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+    osm.addTo(map);
+
+    //OPNVKARTE
+     //this is to make different types of maps
+    var OPNVKarte = L.tileLayer('https://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: 'Map <a href="https://memomaps.de/">memomaps.de</a> <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+
+    OPNVKarte.addTo(map)
+    
+    //landscape
+    //this is to make mmap in landscape view.
+    var Thunderforest_Landscape = L.tileLayer('https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png?apikey={apikey}', {
+        attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        apikey: '<your apikey>',
+        maxZoom: 22
+    });
+
+    Thunderforest_Landscape.addTo(map)
+
+    //satellite of google
+
+    googleSat = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}',{
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3']
+    });
+
+    googleSat.addTo(map)
+
+    var liveLocationMarker;
+
+    function getLiveLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(function (position) {
+                var latlng = [position.coords.latitude, position.coords.longitude];
+
+                if (!liveLocationMarker) {
+                    // Create marker if not already created
+                    liveLocationMarker = L.marker(latlng).addTo(map);
+                    liveLocationMarker.bindPopup('Meri location');  //bindpopup is used when we click on marker it will show that it is current location
+                } else {
+                    // Update marker position
+                    liveLocationMarker.setLatLng(latlng).update();
+                }
+
+                map.setView(latlng, 15); // Set view to the live location with zoom level
+            }, function (error) {
+                console.error('Error getting live location:', error.message);
+            });
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+        }
+    }
+
+    // Call the function to get live location
+    getLiveLocation();
+    
+</script>
+
+</body>
+
+</html>
